@@ -27,13 +27,12 @@ def clean_data(df):
     清洗CSV数据，将数据结构转换为同QMT一致
     
     优化说明：
-    - 避免使用 .copy() 以减少内存占用
     - 使用向量化操作替代 apply() 提高效率
     """
-    # 选择需要的列（不创建副本，直接视图）
-    df = df[['代码', '时间', '开盘价', '最高价', '最低价', '收盘价', '成交量', '成交额']]
+    # 选择需要的列并创建副本，避免 SettingWithCopyWarning
+    df = df[['代码', '时间', '开盘价', '最高价', '最低价', '收盘价', '成交量', '成交额']].copy()
 
-    # 重命名列（原地操作，不创建副本）
+    # 重命名列
     df.columns = ['code', 'time', 'open', 'high', 'low', 'close', 'volume', 'amount']
 
     # 将time列转换为datetime类型
