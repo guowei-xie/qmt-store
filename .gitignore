@@ -1,18 +1,9 @@
-# Python
+# Python 相关
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-
-# 虚拟环境
-venv/
-env/
-ENV/
-.venv
-.ENV
-
-# 分发/打包
 build/
 develop-eggs/
 dist/
@@ -28,14 +19,20 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
 # PyInstaller
 *.manifest
 *.spec
 
-# 单元测试/覆盖率报告
-.pytest_cache/
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
 .tox/
+.nox/
 .coverage
 .coverage.*
 .cache
@@ -43,40 +40,105 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
-htmlcov/
+.pytest_cache/
 
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# IPython
+profile_default/
+ipython_config.py
+
 # pyenv
 .python-version
 
-# 数据库文件
-*.duckdb
-*.db
-*.sqlite
-*.sqlite3
+# pipenv
+Pipfile.lock
 
-# 配置文件（包含本地路径信息）
-config.ini
+# PEP 582
+__pypackages__/
 
-# IDE
-.idea/
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# IDE 相关
 .vscode/
+.idea/
 *.swp
 *.swo
 *~
+
+# 操作系统相关
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
 # 日志文件
 *.log
+logs/
+
+# 数据文件
+*.csv
+*.xlsx
+*.xls
+data/
+results/
+
+# 配置文件（可能包含敏感信息）
+config.ini  
+
+# 第三方库文件（xtquant相关）
+# 为保证xtquant目录下的相关文件不被忽略，取消对该目录的忽略
+# xtquant/
+*.dll
+*.pyd
+
+# 不忽略xtquant下的相关文件
+!xtquant/
+!xtquant/*.dll
+!xtquant/*.pyd
 
 # 临时文件
 *.tmp
 *.temp
-~$*
+temp/
+tmp/
 
-# 操作系统
-Thumbs.db
-.DS_Store
-
+# 备份文件
+*.bak
+*.backup
