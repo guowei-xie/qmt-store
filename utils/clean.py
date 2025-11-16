@@ -1,8 +1,26 @@
 """
-清洗CSV数据，将数据结构转换为同QMT一致
+读取并清洗CSV数据，将数据结构转换为同QMT一致
 """
 
 import pandas as pd
+import os
+# 递归获取所有CSV文件
+def get_all_csv_files(root_path):
+    """
+    递归获取指定路径下所有CSV文件的完整路径
+    
+    Args:
+        root_path: 根目录路径
+        
+    Returns:
+        list: 所有CSV文件的完整路径列表
+    """
+    csv_files = []
+    for root, dirs, files in os.walk(root_path):
+        for file in files:
+            if file.endswith('.csv'):
+                csv_files.append(os.path.join(root, file))
+    return csv_files
 
 def clean_data(df):
     """
