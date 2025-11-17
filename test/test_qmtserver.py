@@ -18,9 +18,7 @@ config = configparser.ConfigParser()
 with open(config_path, 'r', encoding='utf-8') as f:
     config.read_file(f)
 
-mini_qmt_path = config.get('QMT-SERVER', 'mini_qmt_path')
-account_id = config.get('QMT-SERVER', 'account_id')
-
 if __name__ == "__main__":
-    server = QMTDataServer(host='0.0.0.0', port=8000, token=token)
+    server = QMTDataServer(host='0.0.0.0', port=8000)
+    server.start()
    
