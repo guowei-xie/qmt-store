@@ -5,6 +5,7 @@ import duckdb
 import pandas as pd
 import os
 import gc
+from utils.tools import timestamp_to_date
 
 class DuckDBHelper:
     def __init__(self, db_path):
@@ -74,19 +75,21 @@ class DuckDBHelper:
 
     def query_stock_trade_dates(self, stock_code: str, table_name: str) -> list:
         """
-        查询指定股票在指定表的交易日期列表
+        查询指定股票在指定表的交易日期列表（转换为日期字符并去重）
 
         Args:
             stock_code: 股票代码
             table_name: 表名
         Returns:
-            list: 交易日期列表
+            list: 交易日期列表（已转换为日期字符且去重）
         """
+        # 查询所有time（毫秒时间戳），去重并按time排序
         query = f"SELECT DISTINCT time FROM {table_name} WHERE code = ? ORDER BY time"
         result_df = self.conn.execute(query, [stock_code]).df()
-        # 返回time列组成的list
-        if 'time' in result_df.columns:
-            return result_df['time'].tolist()
+        if 'time' in result_df.columns and not result_df.empty:
+            # 使用向量化方法转换并唯一化
+            trade_dates = result_df['time'].map(timestamp_to_date)
+            return sorted(trade_dates.unique().tolist())
         return []
 
     def close(self):

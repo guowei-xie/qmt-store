@@ -14,14 +14,21 @@ import qka.data as qd
 import pandas as pd
 
 
-def main():
-    """获取指定股票的历史数据范围并打印。"""
+def test_get_stock_data_range():
+    """测试获取指定股票的历史数据范围"""
     stock_code = "000001.SZ"
     period = "1d"
     start_time = "20250101"
     end_time = "20251126"
     stock_trade_dates = qd.get_stock_data_range(stock_code, period, start_time, end_time)
+    print(f"股票 {stock_code} 在 {start_time} 到 {end_time} 期间的交易日期:")
     print(stock_trade_dates)
+    return stock_trade_dates
+
+
+def main():
+    """主测试函数"""
+    test_get_stock_data_range()
 
 
 if __name__ == "__main__":

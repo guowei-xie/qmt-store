@@ -51,4 +51,3 @@ def clean_data(df):
         df.loc[~mask, 'code'] = code_series[~mask].str.upper()
 
     return df
-
