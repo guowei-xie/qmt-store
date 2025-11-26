@@ -1,3 +1,5 @@
+import pandas as pd
+
 # 日期字符转换为时间戳，如日期字符 20251126 转换为时间戳: 1764115200000
 def date_to_timestamp(date_str):
     """
@@ -25,14 +27,16 @@ def timestamp_to_date(timestamp):
     ts = pd.to_datetime(int(timestamp), unit='ms', errors='raise')
     return ts.strftime('%Y%m%d')
 
-# 比对列表元素，从B列表中删除A列表中的元素
+# 比对列表元素，从B列表中删除A列表中的元素（保持原列表B的顺序，且返回仅在B不在A中的元素）
 def compare_lists(list_a, list_b):
     """
-    比对列表元素，从B列表中删除A列表中的元素
+    比对列表元素，从B列表中删除A列表中的元素，返回B列表中剩余的元素（保持原列表B的顺序）
     Args:
         list_a: 列表A
         list_b: 列表B
     Returns:
-        list: 列表B
+        list: 仅包含在B但不在A中的元素（顺序与B相同）
     """
-    return list(set(list_b) - set(list_a))
+    # 集合加速判断
+    set_a = set(list_a)
+    return [item for item in list_b if item not in set_a]

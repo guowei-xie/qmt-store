@@ -7,6 +7,7 @@
 4. 更新本地数据库
 """
 
+import pandas as pd
 import configparser
 from qka.client import QMTDataClient
 from utils.duckdb import DuckDBHelper
@@ -67,9 +68,15 @@ def check_and_update_local_data(
         compare_dates = compare_lists(local_trade_dates, trade_dates)
         # 返回需要补全的日期区间
         if compare_dates:
-            print(f"个股{stock_code}需要补全的日期区间: {compare_dates} (进度: {idx + 1}/{total})")
+            print(f"表{table_name}，个股{stock_code}需要补全的日期区间: {compare_dates[0]} 到 {compare_dates[-1]} (进度: {idx + 1}/{total})")
             incremental_data = client.get_daily_bars([stock_code], period, compare_dates[0], compare_dates[-1])
-            duckdb_helper.insert_df_to_duckdb(incremental_data, table_name)
+            df = pd.DataFrame(incremental_data.get(stock_code))
+            # 仅保留列
+            df = df[['time', 'open', 'high', 'low', 'close', 'volume', 'amount']]
+            # 添加新列 code
+            df['code'] = stock_code
+            # 插入到DuckDB
+            duckdb_helper.insert_df_to_duckdb(df, table_name)
 
 
 def main():

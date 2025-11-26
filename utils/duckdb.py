@@ -83,6 +83,14 @@ class DuckDBHelper:
         Returns:
             list: 交易日期列表（已转换为日期字符且去重）
         """
+        # 首先校验表是否存在
+        table_exists = self.conn.execute(
+            "SELECT COUNT(*) FROM information_schema.tables WHERE table_name=?",
+            [table_name]
+        ).fetchone()[0] > 0
+        if not table_exists:
+            return []
+
         # 查询所有time（毫秒时间戳），去重并按time排序
         query = f"SELECT DISTINCT time FROM {table_name} WHERE code = ? ORDER BY time"
         result_df = self.conn.execute(query, [stock_code]).df()

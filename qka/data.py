@@ -199,6 +199,5 @@ def get_stock_data_range(stock_code: str, period: str = '1d', start_time: str = 
         list: 交易日历日期列表
     """
     stock_bars = get_daily_bars([stock_code], period=period, start_time=start_time, end_time=end_time)
-     #使用索引获取交易日期列表
-    stock_trade_dates = stock_bars[stock_code].index.tolist()
-    return stock_trade_dates
+    #time 列转换为日期字符
+    return [timestamp_to_date(time) for time in stock_bars[stock_code]['time']]
