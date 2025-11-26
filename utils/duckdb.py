@@ -72,6 +72,23 @@ class DuckDBHelper:
         """
         return self.conn.execute(f"SELECT * FROM {table_name} LIMIT {limit}").df()
 
+    def query_stock_trade_dates(self, stock_code: str, table_name: str) -> list:
+        """
+        查询指定股票在指定表的交易日期列表
+
+        Args:
+            stock_code: 股票代码
+            table_name: 表名
+        Returns:
+            list: 交易日期列表
+        """
+        query = f"SELECT DISTINCT time FROM {table_name} WHERE code = ? ORDER BY time"
+        result_df = self.conn.execute(query, [stock_code]).df()
+        # 返回time列组成的list
+        if 'time' in result_df.columns:
+            return result_df['time'].tolist()
+        return []
+
     def close(self):
         """
         关闭数据库连接

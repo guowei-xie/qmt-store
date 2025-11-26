@@ -106,3 +106,15 @@ class QMTDataClient:
                        start_time=start_time, 
                        end_time=end_time, 
                        count=count)
+
+    def get_stock_data_range(self, stock_code: str, period: str = '1d', start_time: str = '', end_time: str = '') -> list:
+        """获取个股数据范围（交易日期列表）
+        Args:
+            stock_code: 股票代码
+            period: 周期，'1d'为日线，'1m'为1分钟线
+            start_time: 开始时间
+            end_time: 结束时间
+        Returns:
+            list: 交易日历日期列表
+        """
+        return self.api('get_stock_data_range', stock_code=stock_code, period=period, start_time=start_time, end_time=end_time)
