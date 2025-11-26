@@ -7,6 +7,7 @@ import pandas as pd
 import akshare as ak
 from xtquant import xtdata
 from tqdm import tqdm
+from utils.tools import timestamp_to_date
 
 def add_stock_suffix(stock_code):
     """
@@ -199,5 +200,7 @@ def get_stock_data_range(stock_code: str, period: str = '1d', start_time: str = 
         list: 交易日历日期列表
     """
     stock_bars = get_daily_bars([stock_code], period=period, start_time=start_time, end_time=end_time)
+    if stock_code not in stock_bars:
+        return []
     #time 列转换为日期字符
     return [timestamp_to_date(time) for time in stock_bars[stock_code]['time']]
