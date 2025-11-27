@@ -202,4 +202,8 @@ def get_stock_data_range(stock_code: str, start_time: str = '', end_time: str = 
     if stock_code not in stock_bars:
         return []
     #time 列转换为日期字符
-    return [timestamp_to_date(time) for time in stock_bars[stock_code]['time']]
+    trade_dates = [timestamp_to_date(time) for time in stock_bars[stock_code]['time']]
+    # 二次校验，trade_dates是否属于交易日历内的日期
+    trade_calendar = get_trade_calendar(start_time, end_time)
+    trade_dates = [date for date in trade_dates if date in trade_calendar]
+    return trade_dates
