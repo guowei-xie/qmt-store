@@ -193,7 +193,6 @@ def get_stock_data_range(stock_code: str, start_time: str = '', end_time: str = 
     获取个股数据范围（交易日期列表）
     Args:
         stock_code: 股票代码
-        period: 周期，'1d'为日线，'1m'为1分钟线
         start_time: 开始时间
         end_time: 结束时间
     Returns:

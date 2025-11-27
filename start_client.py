@@ -87,7 +87,7 @@ def main():
 
     stock_list = client.get_stock_list_in_main_board()
 
-    check_and_update_local_data(client, duckdb_helper, stock_list, start_date, end_date, "daily_1day", "1d")
+    # check_and_update_local_data(client, duckdb_helper, stock_list, start_date, end_date, "daily_1day", "1d")
     check_and_update_local_data(client, duckdb_helper, stock_list, start_date, end_date, "daily_1min", "1m")
 
 
