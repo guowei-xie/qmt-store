@@ -188,7 +188,7 @@ def get_daily_bars(stock_list: list, period: str = '1d', start_time: str = '', e
         raise RuntimeError(f"获取行情数据失败: {e}")
 
 # 获取个股数据范围（交易日历日期列表）
-def get_stock_data_range(stock_code: str, period: str = '1d', start_time: str = '', end_time: str = '') -> list:
+def get_stock_data_range(stock_code: str, start_time: str = '', end_time: str = '') -> list:
     """
     获取个股数据范围（交易日期列表）
     Args:
@@ -199,7 +199,7 @@ def get_stock_data_range(stock_code: str, period: str = '1d', start_time: str = 
     Returns:
         list: 交易日历日期列表
     """
-    stock_bars = get_daily_bars([stock_code], period=period, start_time=start_time, end_time=end_time)
+    stock_bars = get_daily_bars([stock_code], start_time=start_time, end_time=end_time)
     if stock_code not in stock_bars:
         return []
     #time 列转换为日期字符

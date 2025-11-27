@@ -73,7 +73,7 @@ class DuckDBHelper:
         """
         return self.conn.execute(f"SELECT * FROM {table_name} LIMIT {limit}").df()
 
-    def query_stock_trade_dates(self, stock_code: str, table_name: str) -> list:
+    def get_stock_trade_dates(self, stock_code: str, table_name: str) -> list:
         """
         查询指定股票在指定表的交易日期列表（转换为日期字符并去重）
 
@@ -99,6 +99,32 @@ class DuckDBHelper:
             trade_dates = result_df['time'].map(timestamp_to_date)
             return sorted(trade_dates.unique().tolist())
         return []
+
+    def get_stock_data(self, stock_code: str, table_name: str) -> pd.DataFrame:
+        """
+        获取指定表中的单只股票数据（按时间升序）
+        """
+        table_exists = self.conn.execute(
+            "SELECT COUNT(*) FROM information_schema.tables WHERE table_name=?",
+            [table_name]
+        ).fetchone()[0] > 0
+        if not table_exists:
+            return pd.DataFrame()
+        query = f"SELECT * FROM {table_name} WHERE code = ? ORDER BY time"
+        return self.conn.execute(query, [stock_code]).df()
+
+    def delete_stock_data(self, stock_code: str, table_name: str) -> None:
+        """
+        删除指定表中的单只股票数据
+        """
+        table_exists = self.conn.execute(
+            "SELECT COUNT(*) FROM information_schema.tables WHERE table_name=?",
+            [table_name]
+        ).fetchone()[0] > 0
+        if not table_exists:
+            return
+        delete_sql = f"DELETE FROM {table_name} WHERE code = ?"
+        self.conn.execute(delete_sql, [stock_code])
 
     def close(self):
         """

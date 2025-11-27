@@ -35,7 +35,7 @@ def get_client_and_helper(config):
 
 def check_and_update_local_data(
     client, duckdb_helper,
-    stock_list, start_date, end_date, table_name
+    stock_list, start_date, end_date, table_name, period
 ):
     """
     检查并更新本地duckdb数据库指定表的个股数据。
@@ -46,25 +46,15 @@ def check_and_update_local_data(
         stock_list (list): 股票代码列表
         start_date (str): 开始日期
         end_date (str): 结束日期
-        table_name (str): 本地duckdb表名（如 'daily_1min' 或 'daily_1d'）
+        table_name (str): 本地duckdb表名（如 'daily_1min' 或 'daily_1day'）
+        period (str): 对应QMT周期（如 '1d' 或 '1m'）
     """
-    # 定义表名与周期的映射关系，使用枚举模式
-    TABLE_PERIOD_MAP = {
-        'daily_1d': '1d',
-        'daily_1min': '1m',
-        # 未来可根据需要扩充更多表对应的周期
-    }
-
     total = len(stock_list)
     for idx, stock_code in enumerate(stock_list):
-        # 获取表名对应的周期，找不到则抛出异常或者设置默认周期
-        period = TABLE_PERIOD_MAP.get(table_name)
-        if not period:
-            raise ValueError(f"未知的表名 '{table_name}'，无法确定对应的周期。请在 TABLE_PERIOD_MAP 中添加该表与周期的映射。")
         # 获取个股数据范围（交易日历日期列表）
-        trade_dates = client.get_stock_data_range(stock_code, period, start_date, end_date)
+        trade_dates = client.get_stock_data_range(stock_code, start_date, end_date)
         # 检查指定表
-        local_trade_dates = duckdb_helper.query_stock_trade_dates(stock_code, table_name)
+        local_trade_dates = duckdb_helper.get_stock_trade_dates(stock_code, table_name)
         compare_dates = compare_lists(local_trade_dates, trade_dates)
         # 返回需要补全的日期区间
         if compare_dates:
@@ -75,8 +65,16 @@ def check_and_update_local_data(
             df = df[['time', 'open', 'high', 'low', 'close', 'volume', 'amount']]
             # 添加新列 code
             df['code'] = stock_code
-            # 插入到DuckDB
-            duckdb_helper.insert_df_to_duckdb(df, table_name)
+            # 合并并去重后重建该股票数据
+            existing_df = duckdb_helper.get_stock_data(stock_code, table_name)
+            merged_df = pd.concat([existing_df, df], ignore_index=True) if not existing_df.empty else df
+            merged_df = (
+                merged_df.sort_values('time')
+                .drop_duplicates(subset='time', keep='last')
+                .reset_index(drop=True)
+            )
+            duckdb_helper.delete_stock_data(stock_code, table_name)
+            duckdb_helper.insert_df_to_duckdb(merged_df, table_name)
 
 
 def main():
@@ -89,8 +87,8 @@ def main():
 
     stock_list = client.get_stock_list_in_main_board()
 
-    check_and_update_local_data(client, duckdb_helper, stock_list, start_date, end_date, "daily_1d")
-    check_and_update_local_data(client, duckdb_helper, stock_list, start_date, end_date, "daily_1min")
+    check_and_update_local_data(client, duckdb_helper, stock_list, start_date, end_date, "daily_1day", "1d")
+    check_and_update_local_data(client, duckdb_helper, stock_list, start_date, end_date, "daily_1min", "1m")
 
 
 if __name__ == "__main__":

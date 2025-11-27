@@ -38,7 +38,7 @@ for file_path in tqdm(source_files, desc="导入CSV文件进度"):
             # 清洗数据块
             chunk = clean_data(chunk)
             # 插入数据块到DuckDB
-            duckdb_helper.insert_df_to_duckdb(chunk, config.get('TARGET', 'min_table'))
+            duckdb_helper.insert_df_to_duckdb(chunk, 'daily_1min')
             # 显式删除chunk以释放内存
             del chunk
             # 强制垃圾回收
