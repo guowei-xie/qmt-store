@@ -7,12 +7,14 @@ import configparser
 
 import os
 import sys
+import pandas as pd
 
 # 添加项目根目录到Python路径
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
 
 from utils.duckdb import DuckDBHelper
+from utils.tools import timestamp_to_date
 
 def test_duckdb_connection_read():
     """测试DuckDB连接并读取数据"""
@@ -49,7 +51,9 @@ def test_get_stock_data():
 
     path = config.get('TARGET', 'path')
     duckdb_helper = DuckDBHelper(path)
-    data = duckdb_helper.get_stock_data("600051.SH", "daily_1day")
+    data = duckdb_helper.get_stock_data("600051.SH", "daily_1min")
+    # 更高效地将 time 列转换为日期时分秒字符（向量化方法）
+    data['time'] = pd.to_datetime(data['time'], unit='ms').dt.strftime('%Y%m%d%H%M%S')
     print(data)
     return data
 

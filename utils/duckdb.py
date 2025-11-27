@@ -5,7 +5,6 @@ import duckdb
 import pandas as pd
 import os
 import gc
-from utils.tools import timestamp_to_date
 
 class DuckDBHelper:
     def __init__(self, db_path):
@@ -91,14 +90,15 @@ class DuckDBHelper:
         if not table_exists:
             return []
 
-        # 查询所有time（毫秒时间戳），去重并按time排序
-        query = f"SELECT DISTINCT time FROM {table_name} WHERE code = ? ORDER BY time"
-        result_df = self.conn.execute(query, [stock_code]).df()
-        if 'time' in result_df.columns and not result_df.empty:
-            # 使用向量化方法转换并唯一化
-            trade_dates = result_df['time'].map(timestamp_to_date)
-            return sorted(trade_dates.unique().tolist())
-        return []
+        # 查询所有time（毫秒时间戳），在SQL侧完成去重与日期转换，避免DataFrame开销
+        # 注意：DuckDB的strftime参数顺序是(TIMESTAMP, FORMAT)，且返回格式需与timestamp_to_date一致(%Y%m%d)
+        query = (
+            f"SELECT DISTINCT strftime(to_timestamp(time::DOUBLE / 1000), '%Y%m%d') AS trade_date "
+            f"FROM {table_name} WHERE code = ? AND time IS NOT NULL ORDER BY trade_date"
+        )
+        rows = self.conn.execute(query, [stock_code]).fetchall()
+        # fetchall返回list[tuple]，避免额外的DataFrame构建
+        return [row[0] for row in rows if row and row[0]]
 
     def get_stock_data(self, stock_code: str, table_name: str) -> pd.DataFrame:
         """
