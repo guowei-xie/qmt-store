@@ -60,11 +60,15 @@ def check_and_update_local_data(
         if compare_dates:
             print(f"表{table_name}，个股{stock_code}需要补全的日期区间: {compare_dates[0]} 到 {compare_dates[-1]} (进度: {idx + 1}/{total})")
             incremental_data = client.get_daily_bars([stock_code], period, compare_dates[0], compare_dates[-1])
-            df = pd.DataFrame(incremental_data.get(stock_code))
-            # 仅保留列
-            df = df[['time', 'open', 'high', 'low', 'close', 'volume', 'amount']]
-            # 添加新列 code
+            stock_data = incremental_data.get(stock_code)
+            if not stock_data:  # 如果incremental_data为空，跳过
+                print(f"个股{stock_code}在区间{compare_dates[0]}到{compare_dates[-1]}无增量数据，跳过。")
+                continue
+            df = pd.DataFrame(stock_data)
             df['code'] = stock_code
+            # 仅保留列
+            df = df[['code', 'time', 'open', 'high', 'low', 'close', 'volume', 'amount']]
+            
             # 合并并去重后重建该股票数据
             existing_df = duckdb_helper.get_stock_data(stock_code, table_name)
             merged_df = pd.concat([existing_df, df], ignore_index=True) if not existing_df.empty else df
@@ -87,7 +91,7 @@ def main():
 
     stock_list = client.get_stock_list_in_main_board()
 
-    # check_and_update_local_data(client, duckdb_helper, stock_list, start_date, end_date, "daily_1day", "1d")
+    check_and_update_local_data(client, duckdb_helper, stock_list, start_date, end_date, "daily_1day", "1d")
     check_and_update_local_data(client, duckdb_helper, stock_list, start_date, end_date, "daily_1min", "1m")
 
 
