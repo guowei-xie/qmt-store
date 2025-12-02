@@ -19,10 +19,15 @@ class DuckDBHelper:
 
         self.conn = duckdb.connect(db_path)
     
-    def insert_df_to_duckdb(self, df: pd.DataFrame, table_name: str) -> bool:
+    def insert_df_to_duckdb(self, df: pd.DataFrame, table_name: str, overwrite: bool = False) -> bool:
         """
         将DataFrame插入到DuckDB中
-        
+
+        参数:
+            df: 要插入的pandas DataFrame
+            table_name: 目标表名
+            overwrite: 是否覆盖写入（为True时会删除原表并重建）
+
         优化说明：
         - 插入后立即unregister释放内存引用
         - 使用参数化查询避免SQL注入（虽然这里表名是配置的，但更安全）
@@ -35,11 +40,16 @@ class DuckDBHelper:
             df.columns = [str(x) for x in df.columns]
             # 注册DataFrame到DuckDB
             self.conn.register('df', df)
-            
+
             # 检查表是否已存在
             table_exists = self.conn.execute(
-                f"SELECT COUNT(*) FROM information_schema.tables WHERE table_name='{table_name}'"
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_name=?", [table_name]
             ).fetchone()[0] > 0
+
+            if overwrite and table_exists:
+                # 覆盖写入：先删除原表
+                self.conn.execute(f"DROP TABLE IF EXISTS {table_name}")
+                table_exists = False  # 此时视为不存在，转下方新建逻辑
 
             if not table_exists:
                 # 新建表并插入数据
@@ -51,12 +61,10 @@ class DuckDBHelper:
                 self.conn.execute(
                     f"INSERT INTO {table_name} SELECT * FROM df"
                 )
-            
+
             # 立即unregister释放对DataFrame的引用
             self.conn.unregister('df')
-            
-            # 提交事务（DuckDB默认自动提交，但显式调用更安全）
-            # DuckDB默认是自动提交的，但可以显式调用确保数据写入
+
             return True
         except Exception as e:
             # 确保出错时也unregister

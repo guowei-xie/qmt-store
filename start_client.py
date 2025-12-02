@@ -84,6 +84,13 @@ def check_and_update_local_data(
             else:
                 duckdb_helper.insert_df_to_duckdb(df, table_name)
 
+def insert_stock_list_to_duckdb(duckdb_helper, stock_list):
+    """
+    将股票列表插入到DuckDB中
+    """
+    df = pd.DataFrame(stock_list, columns=['code'])
+    duckdb_helper.insert_df_to_duckdb(df, 'stock_list', overwrite=True)
+
 def main():
     # 读取配置文件
     config = load_config()
@@ -95,6 +102,9 @@ def main():
 
     stock_list = client.get_stock_list_in_main_board()
 
+    # 写入股票列表到本地库
+    insert_stock_list_to_duckdb(duckdb_helper, stock_list)
+    # 检查并更新本地库行情数据表
     check_and_update_local_data(client, duckdb_helper, stock_list, start_date, end_date, "daily_1day", "1d", rebuild)
     check_and_update_local_data(client, duckdb_helper, stock_list, start_date, end_date, "daily_1min", "1m", rebuild)
 
