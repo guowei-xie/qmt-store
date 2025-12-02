@@ -35,7 +35,7 @@ def get_client_and_helper(config):
 
 def check_and_update_local_data(
     client, duckdb_helper,
-    stock_list, start_date, end_date, table_name, period
+    stock_list, start_date, end_date, table_name, period, rebuild
 ):
     """
     检查并更新本地duckdb数据库指定表的个股数据。
@@ -69,30 +69,34 @@ def check_and_update_local_data(
             # 仅保留列
             df = df[['code', 'time', 'open', 'high', 'low', 'close', 'volume', 'amount']]
             
-            # 合并并去重后重建该股票数据
-            existing_df = duckdb_helper.get_stock_data(stock_code, table_name)
-            merged_df = pd.concat([existing_df, df], ignore_index=True) if not existing_df.empty else df
-            merged_df = (
-                merged_df.sort_values('time')
-                .drop_duplicates(subset='time', keep='last')
-                .reset_index(drop=True)
-            )
-            duckdb_helper.delete_stock_data(stock_code, table_name)
-            duckdb_helper.insert_df_to_duckdb(merged_df, table_name)
-
+            # 是否需要重建（当补全范围可能与已有数据有重叠时，需要重建）
+            if rebuild:
+                # 合并并去重后重建该股票数据
+                existing_df = duckdb_helper.get_stock_data(stock_code, table_name)
+                merged_df = pd.concat([existing_df, df], ignore_index=True) if not existing_df.empty else df
+                merged_df = (
+                    merged_df.sort_values('time')
+                    .drop_duplicates(subset='time', keep='last')
+                    .reset_index(drop=True)
+                )
+                duckdb_helper.delete_stock_data(stock_code, table_name)
+                duckdb_helper.insert_df_to_duckdb(merged_df, table_name)
+            else:
+                duckdb_helper.insert_df_to_duckdb(df, table_name)
 
 def main():
     # 读取配置文件
     config = load_config()
     start_date = config.get('COMPLETION', 'start_date')
     end_date = config.get('COMPLETION', 'end_date')
+    rebuild = config.get('COMPLETION', 'rebuild')
 
     client, duckdb_helper = get_client_and_helper(config)
 
     stock_list = client.get_stock_list_in_main_board()
 
-    check_and_update_local_data(client, duckdb_helper, stock_list, start_date, end_date, "daily_1day", "1d")
-    check_and_update_local_data(client, duckdb_helper, stock_list, start_date, end_date, "daily_1min", "1m")
+    check_and_update_local_data(client, duckdb_helper, stock_list, start_date, end_date, "daily_1day", "1d", rebuild)
+    check_and_update_local_data(client, duckdb_helper, stock_list, start_date, end_date, "daily_1min", "1m", rebuild)
 
 
 if __name__ == "__main__":

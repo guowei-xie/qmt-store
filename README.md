@@ -10,6 +10,7 @@
 - 📊 **数据获取**: 通过 QMT 接口获取股票行情数据（日线、分钟线）
 - 💾 **本地存储**: 使用 DuckDB 高效存储和管理股票数据
 - 🔄 **增量同步**: 自动比对本地和远程数据，智能补全缺失数据
+- 🔧 **数据重建**: 支持数据重建模式，自动合并去重处理重叠数据
 - 🌐 **API 服务**: 提供 FastAPI 数据服务接口
 - ⏰ **定时任务**: 支持定时下载最新数据
 - 📥 **数据导入**: 支持从 CSV 文件批量导入历史数据
@@ -64,7 +65,10 @@ pip install -r requirements.txt
      - `TARGET.path`: DuckDB 数据库路径
      - `QMT-SERVER.base_url`: 数据服务器地址
      - `QMT-SERVER.token`: 访问令牌
-     - `COMPLETION`: 数据补全日期范围配置
+     - `COMPLETION`: 数据补全配置
+       - `rebuild`: 是否启用数据重建模式（当补全范围可能与已有数据有重叠时设为 `true`）
+       - `start_date` / `end_date`: 本地数据日期范围
+       - `remote_1d_start_date` / `remote_1m_start_date`: 远端数据开始日期
 
 ## 使用方法
 
@@ -91,6 +95,7 @@ python start_client.py
 - 与本地数据库进行逐票比对（日线、分钟线数据表）
 - 获取个股需补全的日期区间
 - 获取个股增量数据并更新本地数据库
+- 支持数据重建模式：当补全范围可能与已有数据有重叠时，可启用重建模式自动合并去重
 
 ### 3. 导入 CSV 数据
 
@@ -131,6 +136,10 @@ base_url = http://localhost:8000
 token = your_token_here
 
 [COMPLETION]
+# 是否需要重建（当补全范围可能与已有数据有重叠时，需要重建）
+# true: 合并已有数据和增量数据，去重后重建该股票数据
+# false: 直接插入增量数据（默认，适用于无重叠的情况）
+rebuild = false
 # 本地数据开始日期
 start_date = 20200101
 # 本地数据结束日期
