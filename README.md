@@ -1,9 +1,9 @@
 # QMT 数据存储系统
 
-一个基于 QMT（迅投量化交易平台）的股票数据存储和管理系统，支持数据同步、本地存储和增量更新。主要用于解决在本地非Windows环境下无法使用QMT数据服务的问题。
+一个基于 QMT（迅投量化交易平台）的股票数据存储和管理系统，支持数据同步、本地存储和增量更新。主要用于解决在本地非 Windows 环境下无法使用 QMT 数据服务的问题。
 
-- 在windows服务器运行`start_server.py`用于启动API服务，通过接口间接提取QMT数据；`complete.py`用于补全服务端QMT数据。
-- 在本地运行`start_client.py`用于调用API更新本地数据库；`import_db.py`用于初始化（或有大量级的历史分时数据需求）时导入CSV格式数据。
+- 在 Windows 服务器运行 `start_server.py` 用于启动 API 服务，通过接口间接提取 QMT 数据；`complete.py` 用于补全服务端 QMT 数据。
+- 在本地（可为非 Windows 系统）运行 `start_client.py` 用于调用 API 更新本地数据库；`importdb.py` 用于初始化（或有大量级的历史分时数据需求）时导入 CSV 格式数据。
 
 ## 功能特性
 
@@ -14,6 +14,7 @@
 - 🌐 **API 服务**: 提供 FastAPI 数据服务接口
 - ⏰ **定时任务**: 支持定时下载最新数据
 - 📥 **数据导入**: 支持从 CSV 文件批量导入历史数据
+- 📈 **指数数据补全**: 通过 AkShare 自动获取指定指数（如 `sh000001`）的日线行情，并与本地数据合并去重后写入数据库
 
 ## 项目结构
 
@@ -37,7 +38,7 @@ qmt-store/
 
 ## 环境要求
 
-- Python 3.6+
+- Python 3.10+
 - QMT 量化交易平台
 - DuckDB
 
@@ -165,6 +166,16 @@ remote_1m_start_date = 20251001
 ### daily_1min（分钟线数据表）
 字段同 `daily_1day`，数据粒度为一分钟。
 
+### index_daily（指数日线数据表）
+- `code`: 指数代码（如 `sh000001`）
+- `time`: 时间戳（毫秒）
+- `open`: 开盘价
+- `high`: 最高价
+- `low`: 最低价
+- `close`: 收盘价
+- `volume`: 成交量
+- `amount`: 成交额
+
 ## API 接口
 
 数据服务器提供以下 API 接口（需要 Token 认证）：
@@ -187,11 +198,13 @@ remote_1m_start_date = 20251001
   - 历史数据下载
   - 行情数据获取
 
-- **qka/client.py**: 数据服务客户端，封装 API 调用
+- **qka/client.py**: 数据服务客户端，封装 API 调用。
 
-- **qka/server.py**: 数据服务服务器，自动将 `data.py` 中的函数转换为 API 端点
+- **qka/server.py**: 数据服务服务器，自动将 `data.py` 中的函数转换为 API 端点。
 
-- **utils/duckdb.py**: DuckDB 数据库操作工具类
+- **utils/duckdb.py**: DuckDB 数据库操作工具类，包括表创建、数据插入、个股数据与交易日查询等。
+
+- **utils/clean.py**: 指数数据清洗与字段标准化工具，配合 AkShare 指数数据入库使用。
 
 ## 注意事项
 
