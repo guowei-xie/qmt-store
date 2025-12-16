@@ -51,3 +51,22 @@ def clean_data(df):
         df.loc[~mask, 'code'] = code_series[~mask].str.upper()
 
     return df
+
+
+def clean_index_data(df):
+    """
+    清洗akshare获取的指数日线数据，将数据结构转换为同QMT一致
+    """
+    df = df[['code', 'date', 'open', 'high', 'low', 'close', 'volume', 'amount']].copy()
+    df.columns = ['code', 'time', 'open', 'high', 'low', 'close', 'volume', 'amount']
+    df['time'] = pd.to_datetime(df['time'])
+    df['time'] = (df['time'].astype("int64") // 10**6)  # datetime64是纳秒为单位
+    # code格式转换为QMT兼容的格式，使用向量化操作替代apply提高效率
+    # 取code前两位转换为大写后放置在数值后方
+    if len(df) > 0:
+        # 使用向量化操作处理code列，避免apply的开销
+        code_series = df['code'].astype(str)
+        mask = code_series.str.len() > 2
+        df.loc[mask, 'code'] = code_series[mask].str[2:] + '.' + code_series[mask].str[:2].str.upper()
+        df.loc[~mask, 'code'] = code_series[~mask].str.upper()
+    return df

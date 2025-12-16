@@ -12,6 +12,8 @@ import configparser
 from qka.client import QMTDataClient
 from utils.duckdb import DuckDBHelper
 from utils.tools import compare_lists
+import akshare as ak
+from utils.clean import clean_index_data
 
 
 def load_config(config_path='config.ini'):
@@ -91,6 +93,25 @@ def insert_stock_list_to_duckdb(duckdb_helper, stock_list):
     df = pd.DataFrame(stock_list, columns=['code'])
     duckdb_helper.insert_df_to_duckdb(df, 'stock_list', overwrite=True)
 
+# 获取akshare指数数据并插入数据库
+def get_akshare_index_data_and_insert_to_duckdb(duckdb_helper, symbol_list, start_date, end_date):
+    """
+    获取akshare指数数据并与数据库当前数据合并去重后插入到DuckDB中
+    """
+    for symbol in symbol_list:
+        df = ak.stock_zh_index_daily_em(symbol=symbol, start_date=start_date, end_date=end_date)
+        df['code'] = symbol
+        df = clean_index_data(df)
+        existing_df = duckdb_helper.get_stock_data(symbol, 'index_daily')
+        merged_df = pd.concat([existing_df, df], ignore_index=True) if not existing_df.empty else df
+        merged_df = (
+            merged_df.sort_values('time')
+            .drop_duplicates(subset='time', keep='last')
+            .reset_index(drop=True)
+        )
+        duckdb_helper.delete_stock_data(symbol, 'index_daily')
+        duckdb_helper.insert_df_to_duckdb(merged_df, 'index_daily')
+
 def main():
     # 读取配置文件
     config = load_config()
@@ -100,9 +121,13 @@ def main():
 
     client, duckdb_helper = get_client_and_helper(config)
 
+    # 获取akshare指数数据并插入数据库
+    symbol_list = ['sh000001']
+    get_akshare_index_data_and_insert_to_duckdb(duckdb_helper, symbol_list, start_date, end_date)
+    
+    # 获取股票列表,写入股票列表到本地库
     stock_list = client.get_stock_list_in_main_board()
 
-    # 写入股票列表到本地库
     insert_stock_list_to_duckdb(duckdb_helper, stock_list)
     # 检查并更新本地库行情数据表
     check_and_update_local_data(client, duckdb_helper, stock_list, start_date, end_date, "daily_1day", "1d", rebuild)
